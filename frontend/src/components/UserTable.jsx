@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Info, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Info, MoreHorizontal } from "lucide-react";
 
 const UserTable = () => {
     const [menuState, setMenuState] = useState(null);
     const menuRef = useRef(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(10);
+    const [dataSet, setDataset] = useState([]);
+
+    // format date Logics 
 
     const handleMenuClick = (rowId) => {
         setMenuState((prevState) => (prevState === rowId ? null : rowId));
@@ -82,6 +87,30 @@ const UserTable = () => {
         setMenuState(null);
     };
 
+
+    // Pagination Logic
+
+    const fetchData = async (page) => {
+        try {
+            const response = await fetch(`https://api.example.com/data?page=${page}`);
+            const result = await response.json();
+            setDataset(result.entries);
+            setTotalPages(result.totalPages);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchData(currentPage);
+    }, [currentPage]);
+
+    const handlePageChange = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
     return (
         <div className="table-container  px-5">
             <table border="1" className="w-full border-collapse">
@@ -108,12 +137,12 @@ const UserTable = () => {
                                 <div className="relative">
                                     <MoreHorizontal
                                         onClick={() => handleMenuClick(row.id)}
-                                        className="cursor-pointer" size={18}
+                                        className={menuState === row.id ? "border-2 border-slate-400 bg-slate-200 rounded-md px-0.5 cursor-pointer" : "cursor-pointer "}
                                     />
                                     {menuState === row.id && (
                                         <div
                                             ref={menuRef}
-                                            className="absolute top-1 right-14 bg-slate-50 shadow-md border border-slate-500/15 rounded-md z-20"
+                                            className="absolute top-1 right-12 bg-slate-50 shadow-md border border-slate-500/15 rounded-md z-20"
                                         >
                                             <ul
                                                 className="list-none m-0 px-1 py-0"
@@ -156,7 +185,42 @@ const UserTable = () => {
                     </select>
                 </div>
                 <div>
-
+                    <div className="flex items-center justify-center mt-4 space-x-2">
+                        <button
+                            className="px-3 py-2 bg-gray-200 text-gray-600 rounded disabled:opacity-50"
+                            disabled={currentPage === 1}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        {currentPage > 1 && (
+                            <button
+                                className="px-3 py-1 bg-gray-200 text-gray-600 rounded"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                            >
+                                {currentPage - 1}
+                            </button>
+                        )}
+                        <button className="px-3 py-1 bg-blue-500 text-white rounded">
+                            {currentPage}
+                        </button>
+                        {currentPage < totalPages && (
+                            <button
+                                className="px-3 py-1 bg-gray-200 text-gray-600 rounded"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                            >
+                                {currentPage + 1}
+                            </button>
+                        )}
+                        {currentPage < totalPages - 2 && <span className="px-3">...</span>}
+                        <button
+                            className="px-3 py-2 bg-gray-200 text-gray-600 rounded disabled:opacity-50"
+                            disabled={currentPage === totalPages}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
