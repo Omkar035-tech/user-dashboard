@@ -1,0 +1,15 @@
+{
+    "name": "user-management/api",
+    "description": "User Management CRUD APP",
+    "type": "project",
+    "require": {
+        "php": "^8.0",
+        "ext-pdo": "*",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "UserManage\\": "src/"
+        }
+    }
+}

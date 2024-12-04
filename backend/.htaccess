@@ -1,0 +1,31 @@
+# # Disable directory browsing
+# Options -Indexes
+
+# # Prevent direct access to PHP files
+# <FilesMatch "\.php$">
+#     Order Allow,Deny
+#     Deny from all
+# </FilesMatch>
+
+# # Allow access only to specific API files
+# <Files "api/get-users.php">
+#     Order Allow,Deny
+#     Allow from all
+# </Files>
+
+# # Redirect all requests to index.php or appropriate entry point
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ index.php [L]
+
+# # Prevent viewing of sensitive files
+# <Files ~ "^(config|includes)">
+#     Order Allow,Deny
+#     Deny from all
+# </Files>
+
+# # Enable CORS with proper configuration (modify as needed)
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, Authorization"
