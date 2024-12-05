@@ -16,15 +16,17 @@ const UserTable = () => {
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [schema, setSchema] = useState(null);
+    const [errorVal, setErrorVal] = useState('')
     const [selectedUser, setSelectedUser] = useState(null);
 
     const formSchema = {
+        error: errorVal,
         head: "Add New User",
         fields: [
             { label: "First Name", type: "text", name: "firstname" },
             { label: "Last Name", type: "text", name: "lastname" },
             { label: "Email", type: "email", name: "email" },
-            { label: "Password", type: "password", name: "password" },
+            { label: "Password", type: "text", name: "password" },
             { label: "Date of Birth", type: "date", name: "dob", min: "1985-01-01", max: "2015-12-31" },
         ],
         buttons: [
@@ -33,6 +35,7 @@ const UserTable = () => {
     };
 
     const updateSchema = {
+        error: errorVal,
         head: "Update User Info",
         fields: [
             { label: "First Name", type: "text", name: "firstname" },
@@ -47,6 +50,7 @@ const UserTable = () => {
     };
 
     const deleteSchema = {
+        error: errorVal,
         message: "Are you sure you want to delete this user?",
         buttons: [
             { label: "Yes, Delete", bg: "bg-red-500", action: "delete" },
@@ -54,6 +58,7 @@ const UserTable = () => {
     };
 
     const fileUploadSchema = {
+        error: errorVal,
         head: "Upload Bluk user Data",
         fields: [
             { label: "Upload Excel/CSV", type: "file", name: "file", accept: ".xlsx,.csv" },
@@ -83,15 +88,39 @@ const UserTable = () => {
         switch (action) {
             case "add":
                 try {
+                    const userData = {
+                        firstname: data.firstname,
+                        lastname: data.lastname,
+                        email: data.email,
+                        password: data.password,
+                        dob: data.dob
+                    };
+
                     const response = await fetch(
-                        `http://localhost/user-management-backend/api/adduser.php`
+                        'http://localhost/user-management-backend/api/adduser.php',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(userData),
+                        }
                     );
+
                     if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                        throw new Error(`HTTP error! Status: ${response.status}`);
                     }
+
                     const result = await response.json();
-                    setDataset(result.users || []);
-                    setTotalPages(result.total_pages || 0);
+
+                    if (result.error) {
+                        setErrorVal(result.error)
+                        console.error(result.error);
+                    } else {
+                        console.log(result.message);
+                        setDataset(prevData => [...prevData, { user_id: result.user_id, ...userData }]);
+                    }
+
                 } catch (error) {
                     console.error('Error fetching data:', error);
                 }
