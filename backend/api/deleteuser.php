@@ -1,15 +1,25 @@
 <?php
-// delete functionality implmentation
+// // api/delete-user.php
+// header('Content-Type: application/json');
+// header('Access-Control-Allow-Origin: *');
+// header('Access-Control-Allow-Methods: DELETE');
 
-header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: DELETE');
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
 
-require '../config/database.php';
-require '../includes/functions.php';
-require '../includes/validation.php';
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // Respond with a 200 status to acknowledge the preflight request
+    header("HTTP/1.1 200 OK");
+    exit;
+}
 
-if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
+
+require_once '../config/database.php';
+require_once '../includes/functions.php';
+require_once '../includes/validation.php';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $conn = getDatabaseConnection();
 

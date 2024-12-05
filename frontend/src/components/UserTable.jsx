@@ -97,7 +97,7 @@ const UserTable = () => {
                     };
 
                     const response = await fetch(
-                        'http://localhost/user-management-backend/api/adduser.php',
+                        '/user_manage/api/adduser.php',
                         {
                             method: 'POST',
                             headers: {
@@ -136,7 +136,7 @@ const UserTable = () => {
                     };
 
                     const response = await fetch(
-                        'http://localhost/user-management-backend/api/updateuser.php',
+                        '/user_manage/api/updateuser.php',
                         {
                             method: 'POST',
                             headers: {
@@ -174,7 +174,7 @@ const UserTable = () => {
                     };
 
                     const response = await fetch(
-                        'http://localhost/user-management-backend/api/deleteuser.php',
+                        '/user_manage/api/deleteuser.php',
                         {
                             method: 'POST',
                             headers: {
@@ -270,7 +270,7 @@ const UserTable = () => {
     const fetchData = async () => {
         try {
             const response = await fetch(
-                `http://localhost/user-management-backend/api/getusers.php?page=${page}&limit=${limit}&search=${search}`
+                `/user_manage/api/getusers.php?page=${page}&limit=${limit}&search=${search}`
             );
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);

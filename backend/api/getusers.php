@@ -16,7 +16,6 @@ try {
     $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-    // Calculate offset
     $offset = ($page - 1) * $limit;
 
     $query = "SELECT id, firstname, lastname, email, dob, created_at FROM users";

@@ -1,4 +1,5 @@
 <?php
+// includes/validation.php
 
 function validateEmail($email)
 {
@@ -7,7 +8,23 @@ function validateEmail($email)
 
 function validatePassword($password)
 {
-    return preg_match("/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/", $password);
+    if (strlen($password) <= 8) {
+        return false;
+    }
+
+    // if (!preg_match('/[A-Z]/', $password)) {
+    //     return false;
+    // }
+
+    // if (!preg_match('/[a-z]/', $password)) {
+    //     return false;
+    // }
+
+    // if (!preg_match('/[0-9]/', $password)) {
+    //     return false;
+    // }
+
+    return true;
 }
 
 function validateDate($date)
@@ -37,7 +54,7 @@ function validateUserData($firstname, $lastname, $email, $password, $dob)
     }
 
     if (!validatePassword($password)) {
-        $errors[] = "Password must be at least 8 characters, include uppercase, lowercase, and number";
+        $errors[] = "Password must be at least 8 characters";
     }
 
     if (!validateDate($dob)) {

@@ -1,18 +1,15 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
-$dotenv->load();
-
-// Access environment variables
+define('DB_HOST', 'localhost');
+define('DB_NAME', 'manage_user');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 
 function getDatabaseConnection()
 {
-    $host = getenv('DB_HOST');
-    $user = getenv('DB_USER');
-    $pass = getenv('DB_PASS');
-    $db = getenv('DB_NAME');
-    $apiKey = getenv('API_KEY');
+    $host = 'localhost';
+    $db   = 'manage_user';
+    $user = 'root';
+    $pass = '';
     $charset = 'utf8mb4';
 
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -29,6 +26,7 @@ function getDatabaseConnection()
     }
 }
 
+// Database initialization (run once)
 function initializeDatabase()
 {
     $conn = getDatabaseConnection();

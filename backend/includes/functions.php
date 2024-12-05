@@ -1,8 +1,14 @@
 <?php
+// includes/functions.php
 
 function hashPassword($password)
 {
     return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+}
+
+function generateAPIKey()
+{
+    return bin2hex(random_bytes(16));
 }
 
 function sendJsonResponse($data, $status = 200)
