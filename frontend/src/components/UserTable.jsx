@@ -41,7 +41,6 @@ const UserTable = () => {
             { label: "First Name", type: "text", name: "firstname" },
             { label: "Last Name", type: "text", name: "lastname" },
             { label: "Email", type: "email", name: "email" },
-            { label: "Password", type: "password", name: "password" },
             { label: "Date of Birth", type: "date", name: "dob", min: "1985-01-01", max: "2015-12-31" },
         ],
         buttons: [
@@ -83,7 +82,7 @@ const UserTable = () => {
 
     const handleApiAction = async (action, data) => {
         console.log(`API action triggered: ${action}`);
-        console.log("Data submitted:", data);
+        console.log("Data submitted:", data, selectedUser);
 
         switch (action) {
             case "add":
@@ -118,7 +117,7 @@ const UserTable = () => {
                         console.error(result.error);
                     } else {
                         console.log(result.message);
-                        setDataset(prevData => [...prevData, { user_id: result.user_id, ...userData }]);
+                        setDataset(prevData => [...prevData, { id: result.user_id, ...userData }]);
                     }
 
                 } catch (error) {
@@ -126,10 +125,82 @@ const UserTable = () => {
                 }
                 break;
             case "update":
-                console.log("Calling update user API...");
+                try {
+                    const updateData = {
+                        id: selectedUser.id,
+                        firstname: data.firstname || selectedUser.firstname,
+                        lastname: data.lastname || selectedUser.lastname,
+                        email: data.email || selectedUser.email,
+                        dob: data.dob || selectedUser.dob
+                    };
+
+                    const response = await fetch(
+                        'http://localhost/user-management-backend/api/updateuser.php',
+                        {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(updateData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.error) {
+                        setErrorVal(result.error);
+                        console.error(result.error);
+                    } else {
+                        console.log(result.message);
+                        setDataset(prevData => prevData.map(user =>
+                            user.id === updateData.id ? { ...user, ...updateData } : user
+                        ));
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
                 break;
             case "delete":
-                console.log("Calling delete user API...");
+                try {
+                    const deleteData = {
+                        id: selectedUser.id,
+                        email: selectedUser.email
+                    };
+
+                    const response = await fetch(
+                        'http://localhost/user-management-backend/api/deleteuser.php',
+                        {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(deleteData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.error) {
+                        setErrorVal(result.error);
+                        console.error(result.error);
+                    } else {
+                        console.log(result.message);
+                        // Remove the deleted user from dataset (if necessary)
+                        setDataset(prevData => prevData.filter(user => user.id !== selectedUser.id));
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
                 break;
             case "upload":
                 console.log("Calling file upload API...");
@@ -196,25 +267,6 @@ const UserTable = () => {
         };
     }, []);
 
-    const data = [
-        {
-            id: 1,
-            firstname: "John",
-            lastname: "Doe",
-            email: "john.doe@example.com",
-            dob: "1990-01-01",
-            createdAt: "2023-12-01",
-        },
-        {
-            id: 2,
-            firstname: "John",
-            lastname: "Smit",
-            email: "jane.smith@example.com",
-            dob: "1995-06-15",
-            createdAt: "2023-12-02",
-        },
-    ];
-
     const fetchData = async () => {
         try {
             const response = await fetch(
@@ -226,11 +278,14 @@ const UserTable = () => {
             const result = await response.json();
             setDataset(result.users || []);
             setTotalPages(result.total_pages || 0);
-            setUserCount(result.total_users || 0)
+
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
+    useEffect(() => {
+        setUserCount(dataset.length || 0)
+    }, [dataset])
 
     useEffect(() => {
         fetchData();
@@ -421,6 +476,7 @@ const UserTable = () => {
                     schema={schema}
                     onClose={() => setIsModalOpen(false)}
                     onAction={handleApiAction}
+                    user={selectedUser}
                 />
             )}
 
