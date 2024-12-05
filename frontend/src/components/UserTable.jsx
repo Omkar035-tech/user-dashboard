@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { ChevronLeft, ChevronRight, Info, MoreHorizontal, Pencil, Plus, SearchIcon, Trash, Upload } from "lucide-react";
 import Modal from "./Modal";
 import SearchBox from "./SearchBox";
 import { UserContext } from '../context/UserContext';
 import { toast } from "react-toastify";
 
+import SearchBox from "./SearchBox";
+import { UserContext } from '../context/UserContext';
+import { toast } from "react-toastify";
+
 const UserTable = () => {
+    const { setUserCount } = useContext(UserContext);
     const { setUserCount } = useContext(UserContext);
     const [menuState, setMenuState] = useState(null);
     const menuRef = useRef(null);
@@ -15,18 +21,27 @@ const UserTable = () => {
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState('');
+    const [dataset, setDataset] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [schema, setSchema] = useState(null);
+    const [errorVal, setErrorVal] = useState('')
     const [errorVal, setErrorVal] = useState('')
     const [selectedUser, setSelectedUser] = useState(null);
 
     const formSchema = {
         error: errorVal,
         head: "Add New User",
+        error: errorVal,
+        head: "Add New User",
         fields: [
             { label: "First Name", type: "text", name: "firstname" },
             { label: "Last Name", type: "text", name: "lastname" },
             { label: "Email", type: "email", name: "email" },
+            { label: "Password", type: "text", name: "password" },
             { label: "Password", type: "text", name: "password" },
             { label: "Date of Birth", type: "date", name: "dob", min: "1985-01-01", max: "2015-12-31" },
         ],
@@ -36,6 +51,8 @@ const UserTable = () => {
     };
 
     const updateSchema = {
+        error: errorVal,
+        head: "Update User Info",
         error: errorVal,
         head: "Update User Info",
         fields: [
@@ -51,6 +68,7 @@ const UserTable = () => {
 
     const deleteSchema = {
         error: errorVal,
+        error: errorVal,
         message: "Are you sure you want to delete this user?",
         buttons: [
             { label: "Yes, Delete", bg: "bg-red-500", action: "delete" },
@@ -58,6 +76,8 @@ const UserTable = () => {
     };
 
     const fileUploadSchema = {
+        error: errorVal,
+        head: "Upload Bluk user Data",
         error: errorVal,
         head: "Upload Bluk user Data",
         fields: [
@@ -82,212 +102,223 @@ const UserTable = () => {
     };
 
     const handleApiAction = async (action, data) => {
-        console.log(`API action triggered: ${action}`);
-        console.log("Data submitted:", data, selectedUser);
+        const handleApiAction = async (action, data) => {
+            console.log(`API action triggered: ${action}`);
+            console.log("Data submitted:", data, selectedUser);
+            console.log("Data submitted:", data, selectedUser);
 
-        switch (action) {
-            case "add":
-                try {
-                    const userData = {
-                        firstname: data.firstname,
-                        lastname: data.lastname,
-                        email: data.email,
-                        password: data.password,
-                        dob: data.dob
-                    };
+            switch (action) {
+                case "add":
+                    try {
+                        const userData = {
+                            firstname: data.firstname,
+                            lastname: data.lastname,
+                            email: data.email,
+                            password: data.password,
+                            dob: data.dob
+                        };
 
-                    const response = await fetch(
-                        '/user_manage/api/adduser.php',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(userData),
+                        const response = await fetch(
+                            '/user_manage/api/adduser.php',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(userData),
+                            }
+                        );
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
                         }
-                    );
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
+                        const result = await response.json();
 
-                    const result = await response.json();
-
-                    if (result.error) {
-                        setErrorVal(result.error)
-                        console.error(result.error);
-                    } else {
-                        toast.success(result.message);
-                        setDataset(prevData => [...prevData, { id: result.user_id, ...userData }]);
-                    }
-
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                }
-                break;
-            case "update":
-                try {
-                    const updateData = {
-                        id: selectedUser.id,
-                        firstname: data.firstname || selectedUser.firstname,
-                        lastname: data.lastname || selectedUser.lastname,
-                        email: data.email || selectedUser.email,
-                        dob: data.dob || selectedUser.dob
-                    };
-
-                    const response = await fetch(
-                        '/user_manage/api/updateuser.php',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(updateData),
+                        if (result.error) {
+                            setErrorVal(result.error)
+                            console.error(result.error);
+                        } else {
+                            toast.success(result.message);
+                            setDataset(prevData => [...prevData, { id: result.user_id, ...userData }]);
                         }
-                    );
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
                     }
+                    break;
+                case "update":
+                    try {
+                        const updateData = {
+                            id: selectedUser.id,
+                            firstname: data.firstname || selectedUser.firstname,
+                            lastname: data.lastname || selectedUser.lastname,
+                            email: data.email || selectedUser.email,
+                            dob: data.dob || selectedUser.dob
+                        };
 
-                    const result = await response.json();
+                        const response = await fetch(
+                            '/user_manage/api/updateuser.php',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(updateData),
+                            }
+                        );
 
-                    if (result.error) {
-                        setErrorVal(result.error);
-                        console.error(result.error);
-                    } else {
-                        toast.success(result.message);
-                        setDataset(prevData => prevData.map(user =>
-                            user.id === updateData.id ? { ...user, ...updateData } : user
-                        ));
-                    }
-
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                }
-                break;
-            case "delete":
-                try {
-                    const deleteData = {
-                        id: selectedUser.id,
-                        email: selectedUser.email
-                    };
-
-                    const response = await fetch(
-                        '/user_manage/api/deleteuser.php',
-                        {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify(deleteData),
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
                         }
-                    );
 
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
+                        const result = await response.json();
+
+                        if (result.error) {
+                            setErrorVal(result.error);
+                            console.error(result.error);
+                        } else {
+                            toast.success(result.message);
+                            setDataset(prevData => prevData.map(user =>
+                                user.id === updateData.id ? { ...user, ...updateData } : user
+                            ));
+                        }
+
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
                     }
+                    break;
+                case "delete":
+                    try {
+                        const deleteData = {
+                            id: selectedUser.id,
+                            email: selectedUser.email
+                        };
 
-                    const result = await response.json();
+                        const response = await fetch(
+                            '/user_manage/api/deleteuser.php',
+                            {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(deleteData),
+                            }
+                        );
 
-                    if (result.error) {
-                        setErrorVal(result.error);
-                        console.error(result.error);
-                    } else {
-                        toast.success(result.message);
-                        setDataset(prevData => prevData.filter(user => user.id !== selectedUser.id));
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.error) {
+                            setErrorVal(result.error);
+                            console.error(result.error);
+                        } else {
+                            toast.success(result.message);
+                            setDataset(prevData => prevData.filter(user => user.id !== selectedUser.id));
+                        }
+
+                    } catch (error) {
+                        console.error('Error fetching data:', error);
                     }
-
-                } catch (error) {
-                    console.error('Error fetching data:', error);
-                }
-                break;
-            case "upload":
-                console.log("Calling file upload API...");
-                break;
-            default:
-                console.log("Unknown action");
-        }
-        setIsModalOpen(false);
-    };
-
-    // format date Logics 
-
-    const handleMenuClick = (rowId) => {
-        setMenuState((prevState) => (prevState === rowId ? null : rowId));
-    };
-
-    const formatDateRelative = (createdAt) => {
-        const createdDate = new Date(createdAt);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now - createdDate) / 1000);
-
-        if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-        const diffInMinutes = Math.floor(diffInSeconds / 60);
-        if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
-        const diffInHours = Math.floor(diffInMinutes / 60);
-        if (diffInHours < 24) return `${diffInHours} hours ago`;
-        const diffInDays = Math.floor(diffInHours / 24);
-        if (diffInDays < 30) return `${diffInDays} days ago`;
-        const diffInMonths = Math.floor(diffInDays / 30);
-        if (diffInMonths < 12) return `${diffInMonths} months ago`;
-        const diffInYears = Math.floor(diffInMonths / 12);
-        return `${diffInYears} years ago`;
-    };
-
-    const formatExactDate = (createdAt) => {
-        const options = { day: "numeric", month: "short", year: "numeric" };
-        return new Date(createdAt).toLocaleDateString("en-US", options);
-    };
-
-    const CreatedAt = (createdAt) => {
-        const relativeTime = formatDateRelative(createdAt);
-        const exactDate = formatExactDate(createdAt);
-
-        return (
-            <div
-                className=" text-slate-600"
-            >
-                <span className="text-sm ">{relativeTime}</span>
-                <span className="cursor-pointer" title={exactDate}><Info className="inline-flex ml-2" size={18} /></span>
-            </div>
-        );
-    };
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setMenuState(null);
+                    break;
+                case "upload":
+                    console.log("Calling file upload API...");
+                    break;
+                default:
+                    console.log("Unknown action");
             }
+            setIsModalOpen(false);
         };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
+        // format date Logics 
 
-    const fetchData = async () => {
-        try {
-            const response = await fetch(
-                `/user_manage/api/getusers.php?page=${page}&limit=${limit}&search=${search}`
+        const handleMenuClick = (rowId) => {
+            setMenuState((prevState) => (prevState === rowId ? null : rowId));
+        };
+
+        const formatDateRelative = (createdAt) => {
+            const createdDate = new Date(createdAt);
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - createdDate) / 1000);
+
+            if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) return `${diffInHours} hours ago`;
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays < 30) return `${diffInDays} days ago`;
+            const diffInMonths = Math.floor(diffInDays / 30);
+            if (diffInMonths < 12) return `${diffInMonths} months ago`;
+            const diffInYears = Math.floor(diffInMonths / 12);
+            return `${diffInYears} years ago`;
+        };
+
+        const formatExactDate = (createdAt) => {
+            const options = { day: "numeric", month: "short", year: "numeric" };
+            return new Date(createdAt).toLocaleDateString("en-US", options);
+        };
+
+        const CreatedAt = (createdAt) => {
+            const relativeTime = formatDateRelative(createdAt);
+            const exactDate = formatExactDate(createdAt);
+
+            return (
+                <div
+                    className=" text-slate-600"
+                >
+                    <span className="text-sm ">{relativeTime}</span>
+                    <span className="cursor-pointer" title={exactDate}><Info className="inline-flex ml-2" size={18} /></span>
+                </div>
             );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        };
+
+        useEffect(() => {
+            const handleClickOutside = (event) => {
+                if (menuRef.current && !menuRef.current.contains(event.target)) {
+                    setMenuState(null);
+                }
+            };
+
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
+        }, []);
+
+        const fetchData = async () => {
+            try {
+                const response = await fetch(
+                    `/user_manage/api/getusers.php?page=${page}&limit=${limit}&search=${search}`
+                );
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+                setDataset(result.users || []);
+                setTotalPages(result.total_pages || 0);
+
+                setDataset(result.users || []);
+                setTotalPages(result.total_pages || 0);
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                console.error('Error fetching data:', error);
             }
-            const result = await response.json();
-            setDataset(result.users || []);
-            setTotalPages(result.total_pages || 0);
+        };
+        useEffect(() => {
+            setUserCount(dataset.length || 0)
+        }, [dataset])
+        useEffect(() => {
+            setUserCount(dataset.length || 0)
+        }, [dataset])
 
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
-    useEffect(() => {
-        setUserCount(dataset.length || 0)
-    }, [dataset])
-
-    useEffect(() => {
+        useEffect(() => {
+            fetchData();
+        }, [page, search, limit]);
         fetchData();
     }, [page, search, limit]);
 
@@ -304,6 +335,8 @@ const UserTable = () => {
                 <button onClick={() => handleOpenModal("add")} className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5  dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'><Plus size={18} className='inline-flex mr-1.5' /> Add new user</button>
                 <div className='flex gap-3'>
                     <button onClick={() => handleOpenModal("upload")} className='flex justify-center items-center border-2 rounded-md px-3 py-1 hover:bg-black hover:text-white transition-all duration-300 border-slate-300'><Upload size={18} className='inline-flex mr-1.5' /> Upload Excel/csv</button>
+                    {/* <button className='flex justify-center items-center border-2 rounded-md px-3 py-1 hover:bg-black hover:text-white transition-all duration-300 border-slate-300'><SearchIcon size={18} className='inline-flex mr-1.5' /> Search</button> */}
+                    <SearchBox onSearch={(value) => setSearch(value)} />
                     {/* <button className='flex justify-center items-center border-2 rounded-md px-3 py-1 hover:bg-black hover:text-white transition-all duration-300 border-slate-300'><SearchIcon size={18} className='inline-flex mr-1.5' /> Search</button> */}
                     <SearchBox onSearch={(value) => setSearch(value)} />
                 </div>
@@ -324,99 +357,106 @@ const UserTable = () => {
                     </thead>
                     <tbody>
                         {dataset.map((row) => (
-                            <tr
-                                key={row.id}
-                                className="border-b border-slate-400/20 flex flex-col md:table-row py-4 md:py-0relative"
-                            >
-                                <td className="hidden md:table-cell py-2 ">{row.id}</td>
-                                <td className="hidden md:table-cell py-2 ">{row.firstname + " " + row.lastname}</td>
-                                <td className="hidden md:table-cell py-2 ">{row.email}</td>
-                                <td className="hidden md:table-cell py-2 ">
-                                    {formatExactDate(row.dob)}
-                                </td>
-                                <td className="hidden md:table-cell py-2  text-slate-600">
-                                    {CreatedAt(row.created_at)}
-                                </td>
-                                <td className="hidden md:table-cell py-2">
+                            {
+                                dataset.map((row) => (
+                                    <tr
+                                        key={row.id}
+                                        className="border-b border-slate-400/20 flex flex-col md:table-row py-4 md:py-0relative"
+                                    >
+                                        <td className="hidden md:table-cell py-2 ">{row.id}</td>
+                                        <td className="hidden md:table-cell py-2 ">{row.firstname + " " + row.lastname}</td>
+                                        <td className="hidden md:table-cell py-2 ">{row.email}</td>
+                                        <td className="hidden md:table-cell py-2 ">
+                                            {formatExactDate(row.dob)}
+                                        </td>
+                                        <td className="hidden md:table-cell py-2  text-slate-600">
+                                            {CreatedAt(row.created_at)}
+                                            {CreatedAt(row.created_at)}
+                                        </td>
+                                        <td className="hidden md:table-cell py-2">
 
-                                    <div className="">
-                                        <button className="mx-2 bg-blue-600 px-1.5 rounded-md text-white py-1" onClick={() => handleOpenModal("update", row)}><Pencil size={18} /></button>
-                                        <button className="mx-2 bg-red-500 px-1.5 rounded-md text-white py-1" onClick={() => handleOpenModal("delete", row)}><Trash size={18} /></button>
-                                    </div>
-                                </td>
-                                <td
-                                    className="md:hidden flex flex-col gap-2 p-4 before:font-bold before:text-slate-600"
-                                >
-                                    <span
-                                        className="md:hidden before:content-['ID:'] before:mr-2 before:font-semibold flex justify-between items-center"
-                                    >
-                                        {row.id}
-                                    </span>
-                                    <span
-                                        className="md:hidden before:content-['Name:'] before:mr-2 before:font-semibold flex justify-between items-center capitalize"
-                                    >
-                                        {row.firstname + " " + row.lastname}
-                                    </span>
-                                    <span
-                                        className="md:hidden before:content-['Email:'] before:mr-2 before:font-semibold flex justify-between items-center"
-                                    >
-                                        {row.email}
-                                    </span>
-                                    <span
-                                        className="md:hidden before:content-['DOB:'] before:mr-2 before:font-semibold flex justify-between items-center"
-                                    >
-                                        {formatExactDate(row.dob)}
-                                    </span>
-                                    <span
-                                        className="md:hidden before:content-['Created_At:'] before:mr-2 before:font-semibold flex justify-between items-center"
-                                    >
-                                        {CreatedAt(row.created_at)}
-                                    </span>
-                                    <span
-                                        className=" relative md:hidden before:content-['Actions:'] before:mr-2 before:font-semibold flex justify-between items-center"
-                                    >
-                                        <div className="md:hidden flex justify-end items-center">
-                                            <MoreHorizontal
-                                                onClick={() => handleMenuClick(row.id)}
-                                                className={
-                                                    menuState === row.id
-                                                        ? "border-2 border-slate-400 bg-slate-200 rounded-md px-0.5 cursor-pointer"
-                                                        : "cursor-pointer"
-                                                }
-                                            />
-                                            {menuState === row.id && (
-                                                <div
-                                                    ref={menuRef}
-                                                    className="absolute top-1 right-8 bg-slate-50 shadow-md border border-slate-500/15 rounded-md z-20"
-                                                >
-                                                    <ul className="list-none m-0 px-1 py-0">
-                                                        <li
-                                                            className="px-1.5 py-3 cursor-pointer border-b border-b-slate-400/25"
-                                                            onClick={() => handleOpenModal("update", row)}
+                                            <div className="">
+                                                <button className="mx-2 bg-blue-600 px-1.5 rounded-md text-white py-1" onClick={() => handleOpenModal("update", row)}><Pencil size={18} /></button>
+                                                <button className="mx-2 bg-red-500 px-1.5 rounded-md text-white py-1" onClick={() => handleOpenModal("delete", row)}><Trash size={18} /></button>
+                                            </div>
+                                        </td>
+                                        <td
+                                            className="md:hidden flex flex-col gap-2 p-4 before:font-bold before:text-slate-600"
+                                        >
+                                            <span
+                                                className="md:hidden before:content-['ID:'] before:mr-2 before:font-semibold flex justify-between items-center"
+                                            >
+                                                {row.id}
+                                            </span>
+                                            <span
+                                                className="md:hidden before:content-['Name:'] before:mr-2 before:font-semibold flex justify-between items-center capitalize"
+                                                className="md:hidden before:content-['Name:'] before:mr-2 before:font-semibold flex justify-between items-center capitalize"
+                                            >
+                                                {row.firstname + " " + row.lastname}
+                                                {row.firstname + " " + row.lastname}
+                                            </span>
+                                            <span
+                                                className="md:hidden before:content-['Email:'] before:mr-2 before:font-semibold flex justify-between items-center"
+                                            >
+                                                {row.email}
+                                            </span>
+                                            <span
+                                                className="md:hidden before:content-['DOB:'] before:mr-2 before:font-semibold flex justify-between items-center"
+                                            >
+                                                {formatExactDate(row.dob)}
+                                            </span>
+                                            <span
+                                                className="md:hidden before:content-['Created_At:'] before:mr-2 before:font-semibold flex justify-between items-center"
+                                            >
+                                                {CreatedAt(row.created_at)}
+                                                {CreatedAt(row.created_at)}
+                                            </span>
+                                            <span
+                                                className=" relative md:hidden before:content-['Actions:'] before:mr-2 before:font-semibold flex justify-between items-center"
+                                            >
+                                                <div className="md:hidden flex justify-end items-center">
+                                                    <MoreHorizontal
+                                                        onClick={() => handleMenuClick(row.id)}
+                                                        className={
+                                                            menuState === row.id
+                                                                ? "border-2 border-slate-400 bg-slate-200 rounded-md px-0.5 cursor-pointer"
+                                                                : "cursor-pointer"
+                                                        }
+                                                    />
+                                                    {menuState === row.id && (
+                                                        <div
+                                                            ref={menuRef}
+                                                            className="absolute top-1 right-8 bg-slate-50 shadow-md border border-slate-500/15 rounded-md z-20"
                                                         >
-                                                            Update
-                                                        </li>
-                                                        <li
-                                                            className="px-1.5 py-3 cursor-pointer border-b border-b-slate-400/25"
-                                                            onClick={() => handleOpenModal("delete", row)}
-                                                        >
-                                                            Delete
-                                                        </li>
-                                                        <li
-                                                            className="px-1.5 py-3 cursor-pointer"
-                                                            onClick={() => setMenuState(null)}
-                                                        >
-                                                            Cancel
-                                                        </li>
-                                                    </ul>
+                                                            <ul className="list-none m-0 px-1 py-0">
+                                                                <li
+                                                                    className="px-1.5 py-3 cursor-pointer border-b border-b-slate-400/25"
+                                                                    onClick={() => handleOpenModal("update", row)}
+                                                                >
+                                                                    Update
+                                                                </li>
+                                                                <li
+                                                                    className="px-1.5 py-3 cursor-pointer border-b border-b-slate-400/25"
+                                                                    onClick={() => handleOpenModal("delete", row)}
+                                                                >
+                                                                    Delete
+                                                                </li>
+                                                                <li
+                                                                    className="px-1.5 py-3 cursor-pointer"
+                                                                    onClick={() => setMenuState(null)}
+                                                                >
+                                                                    Cancel
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    </span>
+                                            </span>
 
-                                </td>
-                            </tr>
-                        ))}
+                                        </td>
+                                    </tr>
+                                ))
+                            }
                     </tbody>
                 </table>
                 <div className="text-base py-3 flex justify-between items-center">
@@ -425,10 +465,11 @@ const UserTable = () => {
                             Row Per Page:
                         </span>
                         <select name="" id="" onChange={(e) => { setLimit(e.target.value) }} className="bg-transparent rounded-md border-slate-400/40 border-2">
-                            <option value="10">10</option>
-                            <option value="20">20</option>
-                            <option value="30">30</option>
-                        </select>
+                            <select name="" id="" onChange={(e) => { setLimit(e.target.value) }} className="bg-transparent rounded-md border-slate-400/40 border-2">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                            </select>
                     </div>
                     <div>
                         <div className="flex items-center justify-center mt-4 space-x-2">
@@ -476,6 +517,7 @@ const UserTable = () => {
                     schema={schema}
                     onClose={() => setIsModalOpen(false)}
                     onAction={handleApiAction}
+                    user={selectedUser}
                     user={selectedUser}
                 />
             )}
