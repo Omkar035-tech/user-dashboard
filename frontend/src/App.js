@@ -1,13 +1,12 @@
 import './App.css';
-import Header from './components/Header';
-import UserTable from './components/UserTable';
+import Dashboard from './pages/Dashboard';
+import { UserProvider } from './context/UserContext';
 
 function App() {
   return (
-    <div className="">
-      <Header />
-      <UserTable />
-    </div>
+    <UserProvider>
+      <Dashboard />
+    </UserProvider>
   );
 }
 
