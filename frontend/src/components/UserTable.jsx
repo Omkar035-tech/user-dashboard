@@ -1,60 +1,70 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { ChevronLeft, ChevronRight, Info, MoreHorizontal, Pencil, Plus, SearchIcon, Trash, Upload } from "lucide-react";
 import Modal from "./Modal";
+import SearchBox from "./SearchBox";
+import { UserContext } from '../context/UserContext';
+import { toast } from "react-toastify";
+
 const UserTable = () => {
+    const { setUserCount } = useContext(UserContext);
     const [menuState, setMenuState] = useState(null);
     const menuRef = useRef(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(10);
-    const [dataSet, setDataset] = useState([]);
+    const [dataset, setDataset] = useState([]);
+    const [totalPages, setTotalPages] = useState(0);
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [schema, setSchema] = useState(null);
+    const [errorVal, setErrorVal] = useState('')
     const [selectedUser, setSelectedUser] = useState(null);
-    // Modal Setup 
 
     const formSchema = {
+        error: errorVal,
+        head: "Add New User",
         fields: [
             { label: "First Name", type: "text", name: "firstname" },
             { label: "Last Name", type: "text", name: "lastname" },
             { label: "Email", type: "email", name: "email" },
-            { label: "Password", type: "password", name: "password" },
+            { label: "Password", type: "text", name: "password" },
             { label: "Date of Birth", type: "date", name: "dob", min: "1985-01-01", max: "2015-12-31" },
         ],
         buttons: [
             { label: "Add", bg: "bg-green-500", action: "add" },
-            { label: "Cancel", bg: "bg-gray-400", action: "cancel" },
         ],
     };
 
     const updateSchema = {
+        error: errorVal,
+        head: "Update User Info",
         fields: [
             { label: "First Name", type: "text", name: "firstname" },
             { label: "Last Name", type: "text", name: "lastname" },
             { label: "Email", type: "email", name: "email" },
-            { label: "Password", type: "password", name: "password" },
             { label: "Date of Birth", type: "date", name: "dob", min: "1985-01-01", max: "2015-12-31" },
         ],
         buttons: [
             { label: "Update", bg: "bg-blue-500", action: "update" },
-            { label: "Cancel", bg: "bg-gray-400", action: "cancel" },
         ],
     };
 
     const deleteSchema = {
+        error: errorVal,
         message: "Are you sure you want to delete this user?",
         buttons: [
             { label: "Yes, Delete", bg: "bg-red-500", action: "delete" },
-            { label: "Cancel", bg: "bg-gray-400", action: "cancel" },
         ],
     };
 
     const fileUploadSchema = {
+        error: errorVal,
+        head: "Upload Bluk user Data",
         fields: [
             { label: "Upload Excel/CSV", type: "file", name: "file", accept: ".xlsx,.csv" },
         ],
         buttons: [
             { label: "Upload", bg: "bg-green-500", action: "upload" },
-            { label: "Cancel", bg: "bg-gray-400", action: "cancel" },
         ],
     };
 
@@ -71,19 +81,126 @@ const UserTable = () => {
         setSchema(schemaMap[schemaType]);
     };
 
-    const handleApiAction = (action, data) => {
+    const handleApiAction = async (action, data) => {
         console.log(`API action triggered: ${action}`);
-        console.log("Data submitted:", data);
+        console.log("Data submitted:", data, selectedUser);
 
         switch (action) {
             case "add":
-                console.log("Calling add user API...");
+                try {
+                    const userData = {
+                        firstname: data.firstname,
+                        lastname: data.lastname,
+                        email: data.email,
+                        password: data.password,
+                        dob: data.dob
+                    };
+
+                    const response = await fetch(
+                        'http://localhost/user-management-backend/api/adduser.php',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(userData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.error) {
+                        setErrorVal(result.error)
+                        console.error(result.error);
+                    } else {
+                        toast.success(result.message);
+                        setDataset(prevData => [...prevData, { id: result.user_id, ...userData }]);
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
                 break;
             case "update":
-                console.log("Calling update user API...");
+                try {
+                    const updateData = {
+                        id: selectedUser.id,
+                        firstname: data.firstname || selectedUser.firstname,
+                        lastname: data.lastname || selectedUser.lastname,
+                        email: data.email || selectedUser.email,
+                        dob: data.dob || selectedUser.dob
+                    };
+
+                    const response = await fetch(
+                        'http://localhost/user-management-backend/api/updateuser.php',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(updateData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.error) {
+                        setErrorVal(result.error);
+                        console.error(result.error);
+                    } else {
+                        toast.success(result.message);
+                        setDataset(prevData => prevData.map(user =>
+                            user.id === updateData.id ? { ...user, ...updateData } : user
+                        ));
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
                 break;
             case "delete":
-                console.log("Calling delete user API...");
+                try {
+                    const deleteData = {
+                        id: selectedUser.id,
+                        email: selectedUser.email
+                    };
+
+                    const response = await fetch(
+                        'http://localhost/user-management-backend/api/deleteuser.php',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(deleteData),
+                        }
+                    );
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.error) {
+                        setErrorVal(result.error);
+                        console.error(result.error);
+                    } else {
+                        toast.success(result.message);
+                        setDataset(prevData => prevData.filter(user => user.id !== selectedUser.id));
+                    }
+
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                }
                 break;
             case "upload":
                 console.log("Calling file upload API...");
@@ -150,41 +267,29 @@ const UserTable = () => {
         };
     }, []);
 
-    const data = [
-        {
-            id: 1,
-            firstname: "John",
-            lastname: "Doe",
-            email: "john.doe@example.com",
-            dob: "1990-01-01",
-            createdAt: "2023-12-01",
-        },
-        {
-            id: 2,
-            firstname: "John",
-            lastname: "Smit",
-            email: "jane.smith@example.com",
-            dob: "1995-06-15",
-            createdAt: "2023-12-02",
-        },
-    ];
-
-    // Pagination Logic
-
-    const fetchData = async (page) => {
+    const fetchData = async () => {
         try {
-            const response = await fetch(`https://api.example.com/data?page=${page}`);
+            const response = await fetch(
+                `http://localhost/user-management-backend/api/getusers.php?page=${page}&limit=${limit}&search=${search}`
+            );
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             const result = await response.json();
-            setDataset(result.entries);
-            setTotalPages(result.totalPages);
+            setDataset(result.users || []);
+            setTotalPages(result.total_pages || 0);
+
         } catch (error) {
-            console.error("Error fetching data:", error);
+            console.error('Error fetching data:', error);
         }
     };
+    useEffect(() => {
+        setUserCount(dataset.length || 0)
+    }, [dataset])
 
     useEffect(() => {
-        fetchData(currentPage);
-    }, [currentPage]);
+        fetchData();
+    }, [page, search, limit]);
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
@@ -199,7 +304,8 @@ const UserTable = () => {
                 <button onClick={() => handleOpenModal("add")} className='flex justify-center items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5  dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800'><Plus size={18} className='inline-flex mr-1.5' /> Add new user</button>
                 <div className='flex gap-3'>
                     <button onClick={() => handleOpenModal("upload")} className='flex justify-center items-center border-2 rounded-md px-3 py-1 hover:bg-black hover:text-white transition-all duration-300 border-slate-300'><Upload size={18} className='inline-flex mr-1.5' /> Upload Excel/csv</button>
-                    <button className='flex justify-center items-center border-2 rounded-md px-3 py-1 hover:bg-black hover:text-white transition-all duration-300 border-slate-300'><SearchIcon size={18} className='inline-flex mr-1.5' /> Search</button>
+                    {/* <button className='flex justify-center items-center border-2 rounded-md px-3 py-1 hover:bg-black hover:text-white transition-all duration-300 border-slate-300'><SearchIcon size={18} className='inline-flex mr-1.5' /> Search</button> */}
+                    <SearchBox onSearch={(value) => setSearch(value)} />
                 </div>
 
             </div>
@@ -217,7 +323,7 @@ const UserTable = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((row) => (
+                        {dataset.map((row) => (
                             <tr
                                 key={row.id}
                                 className="border-b border-slate-400/20 flex flex-col md:table-row py-4 md:py-0relative"
@@ -229,7 +335,7 @@ const UserTable = () => {
                                     {formatExactDate(row.dob)}
                                 </td>
                                 <td className="hidden md:table-cell py-2  text-slate-600">
-                                    {CreatedAt(row.createdAt)}
+                                    {CreatedAt(row.created_at)}
                                 </td>
                                 <td className="hidden md:table-cell py-2">
 
@@ -247,9 +353,9 @@ const UserTable = () => {
                                         {row.id}
                                     </span>
                                     <span
-                                        className="md:hidden before:content-['Name:'] before:mr-2 before:font-semibold flex justify-between items-center"
+                                        className="md:hidden before:content-['Name:'] before:mr-2 before:font-semibold flex justify-between items-center capitalize"
                                     >
-                                        {row.name}
+                                        {row.firstname + " " + row.lastname}
                                     </span>
                                     <span
                                         className="md:hidden before:content-['Email:'] before:mr-2 before:font-semibold flex justify-between items-center"
@@ -264,7 +370,7 @@ const UserTable = () => {
                                     <span
                                         className="md:hidden before:content-['Created_At:'] before:mr-2 before:font-semibold flex justify-between items-center"
                                     >
-                                        {CreatedAt(row.createdAt)}
+                                        {CreatedAt(row.created_at)}
                                     </span>
                                     <span
                                         className=" relative md:hidden before:content-['Actions:'] before:mr-2 before:font-semibold flex justify-between items-center"
@@ -318,7 +424,7 @@ const UserTable = () => {
                         <span className="mr-2">
                             Row Per Page:
                         </span>
-                        <select name="" id="" className="bg-transparent rounded-md border-slate-400/40 border-2">
+                        <select name="" id="" onChange={(e) => { setLimit(e.target.value) }} className="bg-transparent rounded-md border-slate-400/40 border-2">
                             <option value="10">10</option>
                             <option value="20">20</option>
                             <option value="30">30</option>
@@ -370,6 +476,7 @@ const UserTable = () => {
                     schema={schema}
                     onClose={() => setIsModalOpen(false)}
                     onAction={handleApiAction}
+                    user={selectedUser}
                 />
             )}
 

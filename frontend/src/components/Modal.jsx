@@ -1,6 +1,21 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { CircleX } from 'lucide-react';
 
-const Modal = ({ schema, onClose, onAction }) => {
+const Modal = ({ schema, onClose, onAction, user }) => {
+    console.log(user)
+    const [formData, setFormData] = useState({});
+
+    // When the modal is opened for updating, populate formData with user data
+    useEffect(() => {
+        if (user) {
+            const initialFormData = {};
+            schema?.fields?.forEach(field => {
+                initialFormData[field.name] = user[field.name] || '';
+            });
+            setFormData(initialFormData);
+        }
+    }, [user, schema.fields]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
@@ -21,14 +36,15 @@ const Modal = ({ schema, onClose, onAction }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <div className="z-50 fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="relative bg-white p-6 rounded-lg shadow-lg w-96">
                 <button
                     onClick={onClose}
                     className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
                 >
-                    &times;
+                    <CircleX size={30} className="text-red-500" />
                 </button>
+                {schema.head && (<h1 className="font-semibold mb-2">{schema.head}</h1>)}
                 {schema.fields && (
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {schema.fields.map((field, index) => (
@@ -39,7 +55,8 @@ const Modal = ({ schema, onClose, onAction }) => {
                                 <input
                                     type={field.type}
                                     name={field.name}
-                                    value={field.value}
+                                    value={formData[field.name] || ''} // Bind input value to formData
+                                    onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
                                     min={field.min || undefined}
                                     max={field.max || undefined}
                                     accept={field.accept || undefined}
@@ -68,7 +85,7 @@ const Modal = ({ schema, onClose, onAction }) => {
                 )}
                 {schema.message && (
                     <div className="text-center space-y-4">
-                        <p className="text-lg font-medium text-gray-700">{schema.message}</p>
+                        <p className="text-lg font-medium text-gray-700 mt-3">{schema.message}</p>
                         <div className="flex space-x-2 justify-center">
                             {schema.buttons.map((button, index) => (
                                 <button
