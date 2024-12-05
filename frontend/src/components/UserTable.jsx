@@ -12,7 +12,6 @@ const UserTable = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [dataset, setDataset] = useState([]);
     const [totalPages, setTotalPages] = useState(0);
-    const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [search, setSearch] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -270,7 +269,7 @@ const UserTable = () => {
     const fetchData = async () => {
         try {
             const response = await fetch(
-                `/user_manage/api/getusers.php?page=${page}&limit=${limit}&search=${search}`
+                `/user_manage/api/getusers.php?page=${currentPage}&limit=${limit}&search=${search}`
             );
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -278,18 +277,16 @@ const UserTable = () => {
             const result = await response.json();
             setDataset(result.users || []);
             setTotalPages(result.total_pages || 0);
+            setUserCount(result.total_users || 0)
 
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
-    useEffect(() => {
-        setUserCount(dataset.length || 0)
-    }, [dataset])
 
     useEffect(() => {
         fetchData();
-    }, [page, search, limit]);
+    }, [currentPage, search, limit]);
 
     const handlePageChange = (page) => {
         if (page >= 1 && page <= totalPages) {
@@ -310,7 +307,7 @@ const UserTable = () => {
 
             </div>
             <hr className='h-[1.5px] bg-slate-300 mx-5' />
-            <div className="px-5">
+            <div className="px-5 mb-[50px]">
                 <table className="w-full border-collapse">
                     <thead className="text-start bg-slate-200 uppercase hidden md:table-header-group">
                         <tr>
@@ -419,19 +416,21 @@ const UserTable = () => {
                         ))}
                     </tbody>
                 </table>
-                <div className="text-base py-3 flex justify-between items-center">
+            </div>
+            <div className="fixed bottom-5 w-full px-3">
+                <div className="bg-white border border-gray-400 rounded-md shadow-md  px-3 text-base py-3 flex justify-between items-center">
                     <div>
                         <span className="mr-2">
                             Row Per Page:
                         </span>
-                        <select name="" id="" onChange={(e) => { setLimit(e.target.value) }} className="bg-transparent rounded-md border-slate-400/40 border-2">
+                        <select name="" id="" onChange={(e) => { setLimit(e.target.value); setCurrentPage(1); }} className="bg-transparent rounded-md border-slate-400/40 border-2">
                             <option value="10">10</option>
                             <option value="20">20</option>
                             <option value="30">30</option>
                         </select>
                     </div>
                     <div>
-                        <div className="flex items-center justify-center mt-4 space-x-2">
+                        <div className="flex items-center justify-center space-x-2">
                             <button
                                 className="px-3 py-2 bg-gray-200 text-gray-600 rounded disabled:opacity-50"
                                 disabled={currentPage === 1}
