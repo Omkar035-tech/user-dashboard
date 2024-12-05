@@ -1,149 +1,169 @@
-CRUD Application using React, PHP, and MySQL
-This is a simple CRUD (Create, Read, Update, Delete) application built using React for the frontend and PHP & MySQL for the backend, hosted on InfinityFree web hosting.
+# CRUD Application with React, PHP, and MySQL  
 
-Features:
-Add User: Allows the addition of user data including First Name, Last Name, Email, Password, and Date of Birth.
-Update User: Enables updating existing user data, including First Name, Last Name, Email, and Date of Birth.
-Delete User: Provides the ability to delete a user from the system.
-Paginated User Details: Displays user details with pagination, allowing users to change the number of rows per page.
-Search Users: Enables searching for a specific user by name or email.
-Project Setup:
-Frontend:
+A **CRUD (Create, Read, Update, Delete)** application built using **React** for the frontend and **PHP** with a **MySQL database** for the backend. This project allows seamless interaction with user data and includes various features like pagination, searching, and secure API interactions. Deployed on **InfinityFree web hosting**. 🚀  
 
-Built using React.
-React's state and props manage the dynamic behavior of the UI.
-Uses axios for HTTP requests to interact with the PHP backend.
-Backend:
+---
+## Deployed Environment Details
+✅ **Frontend (React)**: https://usermanage.ct.ws/index.html                                                   
+✅ **Backend (PHP & MySQL)**: https://usermanage.ct.ws/user_manage/api/[api-name].php 
 
-Built with PHP and connected to a MySQL database.
-Uses prepared statements to prevent SQL injection and ensure safe database interactions.
-The backend includes APIs for handling user data (add, update, delete, search, pagination).
-Database:
 
-A MySQL database to store user data.
-The database includes a users table with the following fields:
-id (INT, primary key)
-firstname (VARCHAR)
-lastname (VARCHAR)
-email (VARCHAR, unique)
-password (VARCHAR)
-dob (DATE)
-Hosting:
 
-The application is hosted on InfinityFree, a free web hosting platform.
-The PHP API is deployed on the backend, and the React frontend is connected to it.
-Setup Details:
-Backend Setup:
+## Features  
+✅ **Add User**  
+- Collects **First Name**, **Last Name**, **Email**, **Password**, and **Date of Birth (DOB)**.  
 
-Create a database in MySQL with the necessary table (users).
-Clone or upload the PHP scripts to the InfinityFree hosting server/Xamapp server for local setup.
-Configure the database connection settings in the PHP scripts.
-Frontend Setup:
+✅ **Update User**  
+- Modifies existing user data: **First Name**, **Last Name**, **Email**, and **DOB**.  
 
-Clone or download the React project.
-Install dependencies using:
-bash
-Copy code
-npm install
-Update the API endpoints in the React code to point to the hosted PHP backend.
-Run the Application:
+✅ **Delete User**  
+- Permanently removes user records.  
 
-For development, run the React app locally using:
-bash
-Copy code
-npm start
-The application will be accessible in the browser at http://localhost:3000.
-API Endpoints:
-GET /getusers: Retrieves paginated user data. Supports query parameters for pagination (page and limit).
-POST /adduser: Adds a new user with firstname, lastname, email, password, and dob.
-POST /updateuser: Updates an existing user's firstname, lastname, email, and dob.
-POST /deleteuser: Deletes a user by id and email for safer check.
-GET /getusers.php?page=${page}&limit=${limit}&search=${search}: Searches for a user by firstname, lastname, or email.
-API Testing:
-Frontend Testing:
+✅ **Paginated User Details**  
+- Retrieves paginated user lists with dynamic row limit selection.  
 
-Manually test all CRUD operations on the user interface by adding, updating, deleting, and searching users.
-Ensure pagination and row limit functionality work as expected.
-Validate the user interface for proper handling of form inputs and error messages.
-Backend Testing:
+✅ **Search Specific User**  
+- Allows searching for users by their details.  
 
-Use Postman or cURL to test the PHP APIs.
-Test GET, POST requests for user-related operations.
-Check the correct HTTP response codes (e.g., 200 for success, 400 for bad request).
+---
 
-Issue with infinityfree Free Hosting Provider tier:
-1) Unable to connect apis to another subdomain as free tier policy it shows forbidden with status 403 or throw CORS errors
-2) Free tier support GET and POST requests PUT and DELETE request restrited by Domain
-3) For current project support free SSL certificate.
+## Validation Details  
+Data validation is implemented to ensure the integrity of user information:  
+1. **Frontend Validation:**  
+   - Form fields are validated for required inputs, email format, and password strength.  
+   - Instant feedback is provided for invalid or missing fields.  
 
-Example Postman request for adding a user:
+2. **Backend Validation:**  
+   - Server-side validation ensures data consistency and rejects invalid or incomplete data.  
+   - **Prepared Statements** are used in PHP to prevent SQL injection.  
 
-http
-Copy code
-POST /users
-Content-Type: application/json
-{
-  "firstname": "John",
-  "lastname": "Doe",
-  "email": "john.doe@example.com",
-  "password": "password123",
-  "dob": "1990-01-01"
-}
-Validation Details:
-Frontend Validation:
+---
 
-Required fields: firstname, lastname, email, dob.
-Email format validation.
-Password strength (min 8 characters).
-All fields must be filled before submitting.
-Backend Validation:
+## Testing Details  
 
-Prevent SQL injection using prepared statements in PHP.
-Validate the email format and check if it’s unique before adding or updating.
-Check for missing or invalid fields before processing requests.
-PHP Prepared Statements for SQL Injection Prevention:
-To prevent SQL injection, the PHP backend uses prepared statements with bound parameters for all database interactions.
+### API Testing  
+- API endpoints were tested using **Postman** for:  
+  - POST (Add User)  
+  - GET (Fetch Users with Pagination)  
+  - PUT (Update User)  
+  - DELETE (Remove User)  
 
-Example (adding a user):
+### Frontend Testing  
+- UI testing was conducted to ensure all forms, buttons, and input fields work as expected.  
+- Pagination and search functionality were verified for correctness.  
 
-php
-Copy code
-<?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get data from request
-    $data = json_decode(file_get_contents("php://input"));
+---
 
-    // Validate the data
-    if (isset($data->firstname) && isset($data->lastname) && isset($data->email) && isset($data->password) && isset($data->dob)) {
-        // Database connection
-        $conn = new mysqli('localhost', 'username', 'password', 'dbname');
-        
-        // Check connection
-        if ($conn->connect_error) {
-            die("Connection failed: " . $conn->connect_error);
-        }
+## Deployment Details  
+The application is deployed on **InfinityFree Web Hosting**:  
+- **Frontend:** React built files are hosted as static assets.  
+- **Backend:** PHP scripts handle API requests, connected to the MySQL database.  
 
-        // Prepare statement to prevent SQL injection
-        $stmt = $conn->prepare("INSERT INTO users (firstname, lastname, email, password, dob) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("sssss", $data->firstname, $data->lastname, $data->email, $data->password, $data->dob);
+---
 
-        // Execute query
-        if ($stmt->execute()) {
-            echo json_encode(["message" => "User added successfully"]);
-        } else {
-            echo json_encode(["error" => "Failed to add user"]);
-        }
+## Setup Details  
 
-        $stmt->close();
-        $conn->close();
-    } else {
-        echo json_encode(["error" => "Missing required fields"]);
-    }
-}
-?>
+### Requirements  
+- **Node.js** (for React development)  
+- **PHP 7.x or above**  
+- **MySQL**  
+- **InfinityFree account** (or similar hosting)  
 
-Deployed Environment Details:
-Frontend (React): https://usermanage.ct.ws/index.html
-Backend (PHP & MySQL): https://usermanage.ct.ws/user_manage/api/[api-name].php
-Conclusion:
+### Installation Steps  
+1. Clone the repository:  
+   ```bash  
+   git clone https://github.com/Omkar035-tech/user-dashboard.git  
+   ```  
+
+2. Setup the **frontend**:  
+   ```bash  
+   cd frontend  
+   npm install  
+   npm run build  
+   ```  
+   Upload the `build/` folder to your web hosting.  
+
+3. Setup the **backend**:  
+   - Configure your database by creating a table:  
+     ```sql  
+     CREATE TABLE users (  
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        firstname VARCHAR(50) NOT NULL,
+        lastname VARCHAR(50) NOT NULL,
+        email VARCHAR(100) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        dob DATE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP  ON UPDATE CURRENT_TIMESTAMP 
+     );  
+     ```  
+   - Update `config/database.php` with your database credentials.  
+   - Upload all PHP files to your web hosting.  
+
+4. Access the app through the deployed URL.  
+
+---
+
+## Security Measures  
+- **Prepared Statements** in PHP protect against SQL injection.  
+- Passwords are securely hashed before storage using PHP's `password_hash()`.  
+
+---
+
+### Example API Endpoints  
+- **Create User:**  
+  `POST /api/adduser.php`  
+  Body:  
+  ```json  
+  {  
+    "firstname": "John",  
+    "lastname": "Doe",  
+    "email": "john.doe@example.com",  
+    "password": "securepassword",  
+    "dob": "1990-01-01"  
+  }  
+  ```  
+
+- **Fetch Users:**  
+  `GET /api/getusers.php?page=${page}&limit=${limit}&search=${search}`  
+
+- **Update User:**  
+  `PUT /api/updateuser.php`  
+  Body:  
+  ```json  
+  {  
+    "id": 1,  
+    "firstname": "John",  
+    "lastname": "Smith",  
+    "email": "john.smith@example.com",  
+    "dob": "1990-01-01"  
+  }  
+  ```  
+
+- **Delete User:**  
+  `DELETE /api/deleteuser.php`  
+  Body:  
+  ```json  
+  {  
+    "id": 1,
+    "email":"test@mail.com", 
+  }  
+  ```  
+
+### Issue with infinityfree Free Hosting Provider tier:
+
+1. Unable to connect apis to another subdomain as free tier policy it shows forbidden with status 403 or throw CORS errors
+2. Free tier support GET and POST requests PUT and DELETE request restrited by Domain
+3. For current project support free SSL certificate.
+
+
+### Roadmap  
+- Add user authentication.  
+- Implement bulk operations (e.g., delete multiple users).  
+- Enhance search with advanced filters.  
+
+Feel free to contribute and improve this project! 💡
+
+
+###  Conclusion
 This project demonstrates a simple full-stack application with a React frontend and PHP/MySQL backend, providing CRUD operations with proper validation, security against SQL injection, and pagination. It's deployed on InfinityFree hosting for easy access and testing.
