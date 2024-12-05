@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Info, MoreHorizontal, Pencil, Plus, SearchIc
 import Modal from "./Modal";
 import SearchBox from "./SearchBox";
 import { UserContext } from '../context/UserContext';
+import { toast } from "react-toastify";
 
 const UserTable = () => {
     const { setUserCount } = useContext(UserContext);
@@ -116,7 +117,7 @@ const UserTable = () => {
                         setErrorVal(result.error)
                         console.error(result.error);
                     } else {
-                        console.log(result.message);
+                        toast.success(result.message);
                         setDataset(prevData => [...prevData, { id: result.user_id, ...userData }]);
                     }
 
@@ -137,7 +138,7 @@ const UserTable = () => {
                     const response = await fetch(
                         'http://localhost/user-management-backend/api/updateuser.php',
                         {
-                            method: 'PUT',
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
@@ -155,7 +156,7 @@ const UserTable = () => {
                         setErrorVal(result.error);
                         console.error(result.error);
                     } else {
-                        console.log(result.message);
+                        toast.success(result.message);
                         setDataset(prevData => prevData.map(user =>
                             user.id === updateData.id ? { ...user, ...updateData } : user
                         ));
@@ -175,7 +176,7 @@ const UserTable = () => {
                     const response = await fetch(
                         'http://localhost/user-management-backend/api/deleteuser.php',
                         {
-                            method: 'DELETE',
+                            method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                             },
@@ -193,8 +194,7 @@ const UserTable = () => {
                         setErrorVal(result.error);
                         console.error(result.error);
                     } else {
-                        console.log(result.message);
-                        // Remove the deleted user from dataset (if necessary)
+                        toast.success(result.message);
                         setDataset(prevData => prevData.filter(user => user.id !== selectedUser.id));
                     }
 

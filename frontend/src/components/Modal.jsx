@@ -104,7 +104,7 @@ const Modal = ({ schema, onClose, onAction, user }) => {
     useEffect(() => {
         if (user) {
             const initialFormData = {};
-            schema.fields.forEach(field => {
+            schema?.fields?.forEach(field => {
                 initialFormData[field.name] = user[field.name] || '';
             });
             setFormData(initialFormData);
